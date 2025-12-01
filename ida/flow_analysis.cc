@@ -189,6 +189,7 @@ void AnalyzeFlow(const insn_t& ida_instruction, Instruction* instruction,
       } else if (xref.type == fl_CN || xref.type == fl_CF) {
         // Call targets
         if (IsPossibleFunction(xref.to, modules)) {
+CALL_TARGET:          
           call_graph->AddFunction(xref.to);
           call_graph->AddEdge(ida_instruction.ea, xref.to);
           entry_point_adder->Add(xref.to, EntryPoint::Source::CALL_TARGET);
@@ -200,8 +201,9 @@ void AnalyzeFlow(const insn_t& ida_instruction, Instruction* instruction,
         handled = true;
       } else if (xref.type == fl_JN || xref.type == fl_JF) {
         // Jump targets
-        if (IsPossibleFunction(xref.to, modules) && xref.type == fl_JF) {
-          call_graph->AddEdge(ida_instruction.ea, xref.to);
+        if (IsPossibleFunction(xref.to, modules)) {
+          // call_graph->AddEdge(ida_instruction.ea, xref.to);
+          goto CALL_TARGET;
         }
         // MIPS adds an extra instruction _after_ the jump that'll
         // always be executed. Thus we need to branch from that for flow
