@@ -102,6 +102,13 @@ bool IsPossibleFunction(Address address, const ModuleMap& modules) {
          modules.find(address) != modules.end();
 }
 
+bool IsFunctionEntry(Address target, CallGraph* call_graph){
+  if (!IsCode(target))
+    return false;
+
+  return call_graph->FindEntryPoint(target);
+}
+
 // Returns whether the specified instruction is an unconditional jump.
 // Jump is unconditional iff there is exactly one reference (either code or data
 // (for imported functions)). In particular, note that there may not be a flow
@@ -200,11 +207,6 @@ CALL_TARGET:
             xref.to, TYPE_CALL_DIRECT);
         handled = true;
       } else if (xref.type == fl_JN || xref.type == fl_JF) {
-        // Jump targets
-        if (IsPossibleFunction(xref.to, modules)) {
-          // call_graph->AddEdge(ida_instruction.ea, xref.to);
-          goto CALL_TARGET;
-        }
         // MIPS adds an extra instruction _after_ the jump that'll
         // always be executed. Thus we need to branch from that for flow
         // graph reconstruction to work...
@@ -212,6 +214,15 @@ CALL_TARGET:
                                            ? instruction->GetNextInstruction()
                                            : ida_instruction.ea;
         if (unconditional_jump) {
+          // Maybe Tail Call
+          if (IsFunctionEntry(xref.to, call_graph)) {
+            // LOG(INFO) << absl::StrCat(
+            //   "remove tail call edge. from: ",
+            //   absl::Hex(ida_instruction.ea, absl::kZeroPad8),
+            //   " to: ",
+            //   absl::Hex(xref.to, absl::kZeroPad8));
+            goto CALL_TARGET;
+          }
           flow_graph->AddEdge(FlowGraphEdge(source_address, xref.to,
                                             FlowGraphEdge::TYPE_UNCONDITIONAL));
           address_references->emplace_back(

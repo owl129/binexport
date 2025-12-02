@@ -184,6 +184,10 @@ const CallGraph::FunctionEntryPoints& CallGraph::GetFunctions() const {
   return functions_;
 }
 
+bool CallGraph::FindEntryPoint(Address target) {
+  return functions_.contains(target) ? true : false;
+}
+
 const CallGraph::Edges& CallGraph::GetEdges() const { return edges_; }
 
 CallGraph::Edges& CallGraph::GetEdges() { return edges_; }

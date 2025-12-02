@@ -59,6 +59,7 @@ class CallGraph {
   void AddFunction(Address address);
   FunctionEntryPoints& GetFunctions();
   const FunctionEntryPoints& GetFunctions() const;
+  bool FindEntryPoint(Address target);
   void AddEdge(Address source, Address target);
   void ScheduleEdgeAdd(Function* function, Address source, Address target);
   void SortEdges();
