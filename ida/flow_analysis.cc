@@ -196,12 +196,17 @@ void AnalyzeFlow(const insn_t& ida_instruction, Instruction* instruction,
       } else if (xref.type == fl_CN || xref.type == fl_CF) {
         // Call targets
         if (IsPossibleFunction(xref.to, modules)) {
-CALL_TARGET:          
+CALL_TARGET:
           call_graph->AddFunction(xref.to);
           call_graph->AddEdge(ida_instruction.ea, xref.to);
           entry_point_adder->Add(xref.to, EntryPoint::Source::CALL_TARGET);
         }
         instruction->SetFlag(FLAG_CALL, true);
+        // Check if call target is noreturn
+        func_t* target_func = get_func(xref.to);
+        if (target_func && !func_does_return(xref.to)) {
+          instruction->SetFlag(FLAG_FLOW, false);
+        }
         address_references->emplace_back(
             ida_instruction.ea, GetSourceExpressionId(*instruction, xref.to),
             xref.to, TYPE_CALL_DIRECT);
